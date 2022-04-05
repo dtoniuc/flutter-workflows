@@ -16,8 +16,6 @@ on:
         required: true
         type: string
     secrets:
-      firebase_services_passphrase:
-        required: true
       appstore_cert_base64:
         required: true
       appstore_cert_passphrase:
