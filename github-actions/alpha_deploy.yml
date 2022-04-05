@@ -35,7 +35,6 @@ jobs:
       artifact_path: build/ios/ipa/
       artifact_file: <your_apps_name>.ipa
     secrets:
-      firebase_services_passphrase: ${{ secrets.FIREBASE_SERVICES_ANDROID_PASSPHRASE }}
       appstore_cert_base64: ${{ secrets.APPSTORE_CERT_BASE64 }}
       appstore_cert_passphrase: ${{ secrets.APPSTORE_CERT_PASSPHRASE }}
       ios_mobileprovision_base64: ${{ secrets.IOS_MOBILEPROVISION_BASE64 }}
