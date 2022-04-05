@@ -1,0 +1,14 @@
+name: verify
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master, alpha ]
+
+  workflow_dispatch:
+
+jobs:
+  sanity_check:
+    uses: ./.github/workflows/sanity_check.yml
+    

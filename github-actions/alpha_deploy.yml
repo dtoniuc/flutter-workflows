@@ -1,0 +1,84 @@
+name: alpha_deploy
+
+on:
+  push:
+    branches: [ alpha ]
+
+  workflow_dispatch:
+
+jobs:
+  prebuild:
+    # Run sanity checks before anything else
+    uses: ./.github/workflows/sanity_check.yml
+    
+  build_android:
+    needs: prebuild
+
+    # Build Android APK and upload it as an artifact
+    uses: ./.github/workflows/build_android.yml
+    with:
+      build_number: ${{ github.run_number }}
+      artifact_name: alpha-apk-${{ github.run_number }}
+      artifact_path: build/app/outputs/apk/release
+      artifact_file: app-release.apk
+    secrets:
+      firebase_services_passphrase: ${{ secrets.FIREBASE_SERVICES_ANDROID_PASSPHRASE }}
+
+  build_ios:
+    needs: prebuild
+
+    # Build IOS IPA and upload it as an artifact
+    uses: ./.github/workflows/build_ios.yml
+    with:
+      build_number: ${{ github.run_number }}
+      artifact_name: alpha-ipa-${{ github.run_number }}
+      artifact_path: build/ios/ipa/
+      artifact_file: <your_apps_name>.ipa
+    secrets:
+      firebase_services_passphrase: ${{ secrets.FIREBASE_SERVICES_ANDROID_PASSPHRASE }}
+      appstore_cert_base64: ${{ secrets.APPSTORE_CERT_BASE64 }}
+      appstore_cert_passphrase: ${{ secrets.APPSTORE_CERT_PASSPHRASE }}
+      ios_mobileprovision_base64: ${{ secrets.IOS_MOBILEPROVISION_BASE64 }}
+      runner_keychain_password: ${{ secrets.RUNNER_KEYCHAIN_PASSWORD }}
+
+  ready_to_release:
+    needs: [build_ios,build_android]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      # Wait for both ios and android builds to complete. You don't want to
+      # release only on one platform while the other one fails
+      #
+      # You can add App review at this point (if your Github plan allows it)
+      # to request an admin to approve the release.
+      - run: echo "Builds succeded. Proceeding to alpha release."
+
+  firebase_deploy_android:
+    needs: ready_to_release
+
+    # Deploy Android APK to Firebase App Distribution and 
+    # notify the testers group.
+    uses: ./.github/workflows/firebase_deploy.yml
+    with:
+      artifact_name: alpha-apk-${{ github.run_number }}
+      artifact_path: build/app/outputs/apk/release
+      artifact_file: app-release.apk
+      testers_group: <alpha_testers_group_alias>
+    secrets:
+      firebase_app_id: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+      firebase_token: ${{ secrets.FIREBASE_TOKEN }}
+
+
+  firebase_deploy_ios:
+    needs: ready_to_release
+
+    uses: ./.github/workflows/firebase_deploy.yml
+    with:
+      artifact_name: alpha-ipa-${{ github.run_number }}
+      artifact_path: build/ios/ipa/
+      artifact_file: <your_apps_name>.ipa
+      testers_group: <alpha_testers_group_alias>
+    secrets:
+      firebase_app_id: ${{ secrets.FIREBASE_IOS_APP_ID }}
+      firebase_token: ${{ secrets.FIREBASE_TOKEN }}

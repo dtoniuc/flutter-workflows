@@ -1,0 +1,56 @@
+name: build_android
+
+on:
+  workflow_call:
+    inputs: 
+      build_number:
+        required: true
+        type: string
+      artifact_name:
+        required: true
+        type: string
+      artifact_path:
+        required: true
+        type: string
+      artifact_file:
+        required: true
+        type: string
+    secrets:
+      firebase_services_passphrase:
+        required: true
+
+jobs:
+  build_android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: subosito/flutter-action@v2.3.0
+        with:
+          flutter-version: '2.10.2'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter 
+          cache-path: ${{ runner.tool_cache }}/flutter 
+
+        # Decript google services file which was previously encrypted
+        # to avoid leaking api keys.
+      - name: Decrypt google-services 
+        run: |
+          mkdir $HOME/private
+          gpg --quiet --batch --yes --decrypt --passphrase="$FIREBASE_SECRET" \
+          --output $HOME/private/services.tar android/app/google-services.tar.gpg
+          tar xvf $HOME/private/services.tar
+        env:
+          FIREBASE_SECRET: ${{ secrets.firebase_services_passphrase }}
+
+      - name: Build the APK
+        # Build the apk using the workflow build number as version number
+        run: flutter build apk --release --build-number ${{ inputs.build_number }}
+
+      - name: Upload artifact to Github
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.artifact_path }}/${{ inputs.artifact_file }}

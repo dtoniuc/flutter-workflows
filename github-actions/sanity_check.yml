@@ -1,0 +1,33 @@
+name: sanity_check
+
+on:
+  workflow_call:
+
+jobs:
+  sanity-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: subosito/flutter-action@v2.3.0
+        with:
+          flutter-version: '2.10.2'
+          channel: 'stable'
+          cache: true
+          cache-key: flutter 
+          cache-path: ${{ runner.tool_cache }}/flutter 
+
+      - name: Get all Flutter Packages
+        run: flutter pub get
+
+      - name: Run format
+        run: flutter format lib/** --set-exit-if-changed
+
+      - name: Run analyze
+        run: flutter analyze --no-pub
+
+      - name: Run Flutter Test
+        run: flutter test --no-pub
+
+
