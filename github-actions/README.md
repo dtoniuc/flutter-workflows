@@ -13,6 +13,8 @@ Setting up this workflow is streight forward. Copy the following files into your
 
 The [alpha deployment workflow](alpha_deployment.yml) makes extenisve use of reusable workflows. The workflow's diagram can be seen below.
 
+<img width="1128" alt="Screenshot 2022-04-05 at 17 40 59" src="https://user-images.githubusercontent.com/31992665/161787390-8fc03350-11eb-4027-8a68-93f4084d6fc6.png">
+
 The workflow runs a sanity_check as a prerequisite step, builds the apps and then releases them using firebase app distribution. 
 
 For this workflow to run, several Github Secrets need to be defined. The way to define each of these is presented in the steps below. The complete list of secretes is: 
