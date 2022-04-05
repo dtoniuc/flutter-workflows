@@ -1,0 +1,42 @@
+name: firebase_deploy
+
+on:
+  workflow_call:
+    inputs: 
+      artifact_name:
+        required: true
+        type: string
+      artifact_path:
+        required: true
+        type: string
+      artifact_file:
+        required: true
+        type: string
+      testers_group:
+        required: true
+        type: string
+    secrets:
+      firebase_app_id:
+        required: true
+      firebase_token:
+        required: true
+
+jobs:
+  deploy_android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: ${{ inputs.artifact_path }}
+
+      - name: Deploy
+        uses: wzieba/Firebase-Distribution-Github-Action@v1.3.2
+        with:
+          appId: ${{ secrets.firebase_app_id }}
+          token: ${{ secrets.firebase_token }}
+          file: ${{ inputs.artifact_path }}/${{ inputs.artifact_file }}
